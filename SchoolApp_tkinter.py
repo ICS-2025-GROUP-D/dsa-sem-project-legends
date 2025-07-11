@@ -9,11 +9,11 @@ try:
 except ImportError:
     sv_ttk = None
 from advanced_linked_list import SchoolSystem
-from fee_manager_stack import FeeStack
+from fee_manager import FeeStack
 from school_map import find_shortest_path, get_locations, school_map
 
 class Teacher:
-    def __init__(self, name, emp_id, subject, department, email):
+    def _init_(self, name, emp_id, subject, department, email):
         self.name = name
         self.emp_id = emp_id
         self.subject = subject
@@ -33,7 +33,7 @@ class Teacher:
         }
 
 class SchoolApp:
-    def __init__(self, root):
+    def _init_(self, root):
         self.root = root
         self.root.title("School Management System")
         self.root.geometry("800x600")
@@ -122,10 +122,12 @@ class SchoolApp:
         self.fee_amount_entry = self.add_labeled_entry(tab, 1, "Amount ($):")
 
         self.add_button(tab, 2, "Add Payment", self.add_payment)
-        self.add_button(tab, 3, "View Balance", self.view_balance)
-        self.add_button(tab, 4, "View Payment History", self.view_payment_history)
+        self.add_button(tab, 3, "Check Latest Payment", self.check_latest_payment)
+        self.add_button(tab, 4, "Remove Latest Payment", self.remove_latest_payment)
+        self.add_button(tab, 5, "View Balance", self.view_balance)
+        self.add_button(tab, 6, "View Payment History", self.view_payment_history)
 
-        self.fee_output = self.add_output_text(tab, 5)
+        self.fee_output = self.add_output_text(tab, 7)
 
     def create_navigation_tab(self):
         tab = ttk.Frame(self.notebook)
@@ -151,7 +153,7 @@ class SchoolApp:
         self.teacher_dept_entry = self.add_labeled_entry(tab, 3, "Department:")
         self.teacher_email_entry = self.add_labeled_entry(tab, 4, "Email:")
 
-        self.add_button(tab,5, "Add Teacher", self.add_teacher)
+        self.add_button(tab, 5, "Add Teacher", self.add_teacher)
         self.add_button(tab, 6, "View Records", self.view_all_records)
         self.add_button(tab, 7, "Save Records", self.save_records)
 
@@ -204,7 +206,7 @@ class SchoolApp:
         output = "Students:\n"
         while current:
             data = current.data
-            output += f"ID: {data['id']}, Name: {data['name']}, GradeCAT: {data['grade']}\n"
+            output += f"ID: {data['id']}, Name: {data['name']}, Grade: {data['grade']}\n"
             current = current.next
         self.update_output(self.student_output, output)
 
@@ -222,6 +224,35 @@ class SchoolApp:
         messagebox.showinfo("Success", f"Payment of ${amount:.2f} added for {student_id}.")
         self.fee_student_id_entry.delete(0, tk.END)
         self.fee_amount_entry.delete(0, tk.END)
+
+    def check_latest_payment(self):
+        latest_payment = self.fee_stack.peek()
+        if latest_payment:
+            output = (
+                f"Latest Payment:\n"
+                f"Student ID: {latest_payment['student_id']}\n"
+                f"Amount: ${latest_payment['amount']:.2f}\n"
+                f"Time: {latest_payment['timestamp']}\n"
+            )
+            self.update_output(self.fee_output, output)
+        else:
+            self.update_output(self.fee_output, "No payments recorded.")
+
+    def remove_latest_payment(self):
+        removed_payment = self.fee_stack.pop()
+        if removed_payment:
+            output = (
+                f"Removed Payment:\n"
+                f"Student ID: {removed_payment['student_id']}\n"
+                f"Amount: ${removed_payment['amount']:.2f}\n"
+                f"Time: {removed_payment['timestamp']}\n"
+                f"New Balance: ${self.fee_stack.get_balance():.2f}\n"
+            )
+            messagebox.showinfo("Success", f"Payment of ${removed_payment['amount']:.2f} removed for {removed_payment['student_id']}.")
+            self.update_output(self.fee_output, output)
+        else:
+            messagebox.showerror("Error", "No payments to remove.")
+            self.update_output(self.fee_output, "No payments recorded.")
 
     def view_balance(self):
         balance = self.fee_stack.get_balance()
@@ -245,7 +276,6 @@ class SchoolApp:
         else:
             output = "No path found or invalid locations."
         self.update_output(self.nav_output, output)
-
     # Teacher Methods
     def add_teacher(self):
         name = self.teacher_name_entry.get().strip()
@@ -300,7 +330,7 @@ class SchoolApp:
         self.save_records()
         self.root.destroy()
 
-if __name__ == "__main__":
+if _name_ == "_main_":
     root = tk.Tk()
     app = SchoolApp(root)
     root.mainloop()
